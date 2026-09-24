@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 /** Linear blend between two 0xRRGGBB colors. */
 export function lerpColor(a: number, b: number, t: number): number {

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { ARENA } from './config';
 import { BootScene } from './scenes/BootScene';
 import { DuelScene } from './scenes/DuelScene';

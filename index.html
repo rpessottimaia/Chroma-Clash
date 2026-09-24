@@ -36,6 +36,11 @@
   </head>
   <body>
     <div id="game"></div>
+    <!-- Keep the Phaser version here in sync with package.json. -->
+    <script type="importmap">
+      { "imports": { "phaser": "https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.esm.min.js" } }
+    </script>
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.esm.min.js" crossorigin />
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

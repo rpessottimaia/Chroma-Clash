@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { ARENA, BALL, CATCH, DUEL, FX, PLAYER } from '../config';
 import { RivalAI } from '../ai/rival';
 import type { Side } from '../core/ball';
@@ -451,6 +451,8 @@ export class DuelScene extends Phaser.Scene {
     // Ball: tinted halo plus a white-hot core, always the brightest thing on screen.
     const t = this.top;
     t.clear();
+    this.ballGlow.setVisible(this.phase !== 'title');
+    if (this.phase === 'title') return;
     const idle = duel.state === 'ready';
     const pulse = idle ? 0.8 + Math.sin(this.time.now / 120) * 0.2 : 1;
     this.ballGlow.setPosition(ball.x, ball.y).setTint(bc).setScale(1.5 * pulse).setAlpha(1);

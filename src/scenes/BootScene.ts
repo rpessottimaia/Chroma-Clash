@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 /** Generates the few textures the game needs (no image assets to download). */
 export class BootScene extends Phaser.Scene {
