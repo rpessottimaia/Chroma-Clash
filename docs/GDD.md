@@ -50,20 +50,21 @@ Touch only, with two gestures: slide to move, tap to switch power. Catching is a
 - **Color feedback:** the whole world (court lines, grid, your glow) shifts to the armed power's color, so you never need to look at the UI.
 - **Refill:** a thrown power is spent, and its slot refills with the next card from your deck.
 - **Catch position matters:** a center catch is a perfect catch for bonus damage (+25%). An edge catch sends the ball at an angle, which is how you aim. Damage versus aim is a built-in tradeoff.
+- **Curved flight:** the ball never flies like Pong. Every throw bends: an edge catch adds curve toward the side it touched, catching while moving whips the ball in that direction, and every throw gets a little random spin. Cards add big arcs, S-bends and zigzags. Curve mirrors and softens off the side walls, and a ball can never turn flatter than ~60° from vertical.
 
 ## Color system
 
-The MVP ships three colors that form a counter triangle; Green and White come after launch.
+All five colors ship in the MVP, each with its own 8-card deck to draft from.
 
-| Color | Name | Identity | In MVP |
-| --- | --- | --- | --- |
-| Red | Surge | Raw speed and damage | Yes |
-| Blue | Phase | Tricks and deception, hard to read | Yes |
-| Black | Void | Drain and sacrifice, power at a price | Yes |
-| Green | Growth | Momentum and scaling over a rally | Later |
-| White | Aegis | Defense, reflection, slowing the ball | Later |
+| Color | Name | Identity |
+| --- | --- | --- |
+| Red | Surge | Raw speed and damage |
+| Blue | Phase | Curves and tricks, hard to read |
+| Black | Void | Drain and sacrifice, power at a price |
+| Green | Growth | Momentum that scales over a rally |
+| White | Aegis | Shields, slowing and control |
 
-**Counter triangle:** Red beats Blue, Blue beats Black, Black beats Red. Catching an incoming ball with the power that counters its color cancels the incoming effect and adds bonus damage to your throw.
+**Counter wheel:** each color beats the next around the circle: Red > Blue > Black > Green > White > Red. (This keeps Red > Blue > Black from the original triangle; Black no longer beats Red.) Catching an incoming ball with the power that counters its color cancels the incoming effect and adds bonus damage to your throw.
 
 **Charge and ultimates:** throwing the same color three times in a row unleashes that color's ultimate.
 
@@ -73,9 +74,19 @@ The MVP ships three colors that form a counter triangle; Green and White come af
 
 This creates the deck-building tension: a mono-color deck charges ultimates reliably but has a known weakness, while a two-color deck is more flexible but charges less often.
 
+## Deck building (meta layer)
+
+Before every duel you build your deck from the full pool, and it is saved on your device between sessions.
+
+- **Pool:** five color decks of 8 cards each (40 cards). The authoritative list with numbers lives in `src/core/cards.ts`.
+- **Your deck:** 3 to 7 unique cards, from any mix of colors. A 3-card deck keeps the same three powers in your slots all duel; a bigger deck cycles through more options but is less predictable to manage.
+- **Rivals:** each rival has a color identity (shown as "VS VOID" before the serve) and a 5-card deck: four of its color plus one off-color card.
+- **Record:** wins, losses and top rally speed are tracked on the menu.
+- **Later:** unlocks (start with a subset of the pool and earn the rest), rarity limits, and the roguelike run's card rewards feed into the same collection.
+
 ## Cards
 
-The MVP card pool has 12 cards, four per color; damage numbers are starting values to tune in playtesting.
+The original 12-card set (below) is now part of the 40-card pool; Green and White and extra Red/Blue/Black cards were added with the deck-building update. Damage numbers are starting values to tune in playtesting.
 
 | Card | Color | Rarity | Damage | Effect |
 | --- | --- | --- | --- | --- |
@@ -92,7 +103,7 @@ The MVP card pool has 12 cards, four per color; damage numbers are starting valu
 | Sacrifice | Black | Rare | 35 | You lose 15 HP to throw it |
 | Shade | Black | Common | 12 | Dims the arena lights briefly for the rival |
 
-Each starter deck holds 8 cards: 6 commons of its color and 2 cards from a neighboring color.
+New players start with a 5-card deck (Fastball, Curve, Leech, Sprout, Guard), one of each color, and can edit it freely.
 
 ## Shared quests
 

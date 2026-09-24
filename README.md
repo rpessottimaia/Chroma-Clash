@@ -6,9 +6,12 @@ The full design is in [`docs/GDD.md`](docs/GDD.md).
 
 ## How to play
 
+Build a deck of 3 to 7 cards from five color decks (Surge, Phase, Void, Growth, Aegis; 8 cards each) on the **Edit deck** screen. Your deck is saved on your device. Then hit **Play** to face a color-themed rival.
+
 - **Slide** a thumb anywhere to move your chevron (it follows like a slider).
 - **Tap** (or tap with a second finger while sliding) to cycle your 3 armed powers. Tap a pip to arm it directly.
 - **Catching is automatic** when the ball reaches you inside your reach bar. The bright middle of the bar is a perfect catch (+25% damage). Edge catches angle the throw back.
+- **Every throw curves.** Edge catches and catching on the move bend the ball; cards add arcs, S-bends, zigzags, decoys and more.
 - A missed ball hits you for the damage it carries, then ricochets straight back at the thrower. It never resets, and the speed only climbs.
 
 Desktop fallback: arrow keys or A/D to move, Space to cycle, 1/2/3 to arm a slot.
@@ -32,17 +35,18 @@ src/
   main.ts          Phaser config (portrait 720x1560, scale FIT)
   settings.ts      reduce-motion / reduce-flashes / debug flags
   core/            pure game logic, no Phaser imports (reusable by a server later)
-    ball.ts        ball state, speed ramp, wall bounces, landing prediction
-    duel.ts        HP, auto-catch, perfect/edge catches, hit + ricochet rule
+    ball.ts        ball state, speed ramp, curved flight, wall bounces, landing prediction
+    duel.ts        HP, auto-catch, perfect/edge catches, card effects, statuses, hit + ricochet
     deck.ts        3 power slots, cycling, spend + refill
-    cards.ts       the 12 MVP cards
-    colors.ts      neon palette + counter triangle
-  ai/rival.ts      rival movement and aim
-  scenes/          Boot (generated textures), Duel (rendering + input)
-  fx/neon.ts       glow line helpers
+    cards.ts       the 40-card pool (5 colors x 8) built from composable effects
+    colors.ts      neon palette + counter wheel
+  ai/rival.ts      rival decks, movement, curve prediction, decoy confusion
+  meta/profile.ts  saved deck and record (localStorage)
+  scenes/          Boot (generated textures), Menu, Deck (builder), Duel (rendering + input)
+  fx/              neon glow helpers, buttons, round backdrop
 tests/             Vitest specs for the core
 ```
 
 ## Status
 
-GDD milestones 1 (neon arena, continuous ball, speed ramp, slide to move, auto-catch, AI rival) and 2 (power slots, tap to cycle, world color shift) are done. Card effects beyond damage and speed, counters, ultimates, quests and the roguelike run come next.
+Done: GDD milestones 1 (neon arena, continuous ball, speed ramp, slide to move, auto-catch, AI rival) and 2 (power slots, tap to cycle, world color shift), plus deck building with five colors, 40 cards with working effects, and curved ball flight. Next: counter bonuses, ultimates, quests and the roguelike run.

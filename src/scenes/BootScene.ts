@@ -10,7 +10,8 @@ export class BootScene extends Phaser.Scene {
     this.makeGlow('glow', 128);
     this.makeSpark('spark', 6);
     this.makeScanlines('scanlines');
-    this.scene.start('Duel');
+    this.makeDots('dots', 48);
+    this.scene.start('Menu');
   }
 
   /** Soft white radial falloff, tinted and additively blended for every neon halo. */
@@ -34,6 +35,17 @@ export class BootScene extends Phaser.Scene {
     const ctx = tex.getContext();
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, size, size);
+    tex.refresh();
+  }
+
+  /** One soft dot per tile, tiled into the backdrop's dot matrix. */
+  private makeDots(key: string, size: number): void {
+    const tex = this.textures.createCanvas(key, size, size)!;
+    const ctx = tex.getContext();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, 2, 0, Math.PI * 2);
+    ctx.fill();
     tex.refresh();
   }
 

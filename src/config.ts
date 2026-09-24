@@ -45,6 +45,35 @@ export const CATCH = {
   maxDeflectDeg: 40,
 } as const;
 
+/** Curved flight: every throw bends a little, and cards bend it a lot. Curve is in rad/s of heading change. */
+export const CURVE = {
+  /** Curve from an edge catch, at the very edge of reach (sign follows the side the ball touched). */
+  edgeCurve: 0.55,
+  /** Curve per unit/s of the catcher's sideways movement at the moment of the catch. */
+  moveCurve: 0.0005,
+  /** Random curve every throw gets (+/-), so no two rallies trace the same line. */
+  jitter: 0.18,
+  /** Fraction of curve lost per second of flight. */
+  decay: 0.2,
+  /** Fraction of curve kept (mirrored) after a side-wall bounce. */
+  bounceKeep: 0.7,
+  /** The ball never heads flatter than this, degrees from vertical. */
+  maxHeadingDeg: 62,
+  /** Hard cap on curve magnitude. */
+  maxCurve: 2.4,
+} as const;
+
+/** Status effects applied by cards. */
+export const STATUS = {
+  /** Movement speed multiplier while slowed. */
+  slowMul: 0.5,
+  /** Catch reach multiplier while a reach boost is active. */
+  reachMul: 1.4,
+  /** Rival AI error multipliers when it can't read the ball well. */
+  blindErrorMul: 2.2,
+  ghostErrorMul: 1.6,
+} as const;
+
 export const HIT = {
   /** Damage carried by a ricochet (the ball bouncing off a victim's end wall). */
   ricochetDamage: 6,
@@ -90,7 +119,13 @@ export const DUEL = {
 } as const;
 
 export const DECK = {
+  /** Power slots in a duel. */
   slots: 3,
+  /** Deck size limits in the deck builder (cards are unique). */
+  min: 3,
+  max: 7,
+  /** Cards in a generated rival deck. */
+  rivalSize: 5,
 } as const;
 
 export const FX = {

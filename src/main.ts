@@ -1,7 +1,9 @@
 import * as Phaser from 'phaser';
 import { ARENA } from './config';
 import { BootScene } from './scenes/BootScene';
+import { DeckScene } from './scenes/DeckScene';
 import { DuelScene } from './scenes/DuelScene';
+import { MenuScene } from './scenes/MenuScene';
 
 // Stop iOS pinch-zoom and double-tap zoom; the canvas owns every touch.
 document.addEventListener('gesturestart', (e) => e.preventDefault());
@@ -27,5 +29,5 @@ new Phaser.Game({
   fps: {
     target: 60,
   },
-  scene: [BootScene, DuelScene],
+  scene: [BootScene, MenuScene, DeckScene, DuelScene],
 });
