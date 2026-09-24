@@ -22,7 +22,7 @@ export const BALL = {
   /** Rally speed at the start of a duel (units per second). */
   baseSpeed: 560,
   /** Added to the rally speed on every catch. */
-  rampPerTouch: 16,
+  rampPerTouch: 10,
   /** Added to the rally speed every second of play. */
   rampPerSecond: 3.2,
   /** The rally speed never exceeds this. */
@@ -36,14 +36,32 @@ export const BALL = {
 } as const;
 
 export const CATCH = {
-  /** Half-width of the catch zone around a player's center. */
-  reach: 96,
-  /** Fraction of reach (from center) that counts as a perfect catch. */
-  perfectZone: 0.28,
+  /** A ball closer than this to your center hits you (plus the ball's radius). */
+  bodyRadius: 50,
+  /** With hands up, you catch balls this close to your center. */
+  catchRadius: 84,
+  /** Hands stay up this long after a tap: the ball must arrive inside it. */
+  window: 0.3,
+  /** After a tap you can't tap again for this long (a fumble leaves you exposed). */
+  cooldown: 0.45,
+  /** Tap within this many seconds of impact for a perfect catch. */
+  perfectWindow: 0.1,
   perfectDamageMul: 1.25,
-  /** Angle of the return throw at the very edge of reach, degrees from vertical. */
-  maxDeflectDeg: 40,
+  /** Taps only count when the incoming ball is at most this many seconds away. */
+  pressZone: 0.9,
 } as const;
+
+/** Throwing: every throw is aimed at the opponent's body. */
+export const AIM = {
+  /** Widest launch angle, degrees from vertical. */
+  maxDeg: 55,
+  /** Random miss distance (+/- units) around the target. */
+  playerError: 16,
+  rivalError: 26,
+  /** Fraction of the target's sideways velocity x flight time to lead by. */
+  playerLead: 0.25,
+  rivalLead: 0.5,
+} as const
 
 /** Curved flight: every throw bends a little, and cards bend it a lot. Curve is in rad/s of heading change. */
 export const CURVE = {
@@ -67,7 +85,7 @@ export const CURVE = {
 export const STATUS = {
   /** Movement speed multiplier while slowed. */
   slowMul: 0.5,
-  /** Catch reach multiplier while a reach boost is active. */
+  /** Catch radius multiplier while a reach boost (Halo) is active. */
   reachMul: 1.4,
   /** Rival AI error multipliers when it can't read the ball well. */
   blindErrorMul: 2.2,
@@ -77,10 +95,10 @@ export const STATUS = {
 export const HIT = {
   /** Damage carried by a ricochet (the ball bouncing off a victim's end wall). */
   ricochetDamage: 6,
-  /** Random spread (units) around the attacker when the ball ricochets back. */
-  ricochetSpread: 70,
-  /** Steepest angle a ricochet can take, degrees from vertical. */
-  ricochetMaxDeg: 30,
+  /** Damage of a plain throw after picking up a dodged ball. */
+  plainDamage: 8,
+  /** Seconds to pick up a dodged ball from the back wall before throwing it. */
+  pickupTime: 0.45,
 } as const;
 
 export const PLAYER = {
@@ -91,29 +109,22 @@ export const PLAYER = {
   maxSpeed: 3200,
   /** Keyboard movement speed (desktop fallback). */
   keySpeed: 1100,
-  /** A touch shorter than this, moving less than tapSlop, counts as a tap. */
-  tapMaxMs: 180,
-  tapSlop: 14,
 } as const;
 
 export const RIVAL = {
   maxHp: 100,
-  /** 0..1, higher = smaller prediction error and faster reaction. */
+  /** 0..1: chance to catch a plain, slow ball (harder balls lower it). */
   skill: 0.62,
   moveSpeed: 900,
   /** Seconds before the rival reacts to a new throw. */
   reactionTime: 0.16,
-  /** Prediction error at skill 0, in units, scaled up with ball speed. */
-  maxError: 190,
-  /** How much faster balls make the rival's error grow (per unit of speed over base). */
+  /** How much faster balls cut the rival's catch chance (per unit of speed over base). */
   errorSpeedFactor: 0.0011,
-  /** How hard the rival tries to hit off-center to angle its throws (0..1 of reach). */
-  aimOffset: 0.55,
 } as const;
 
 export const DUEL = {
   /** Countdown before the serve. */
-  readyTime: 1.4,
+  readyTime: 2.2,
   /** Fixed physics step. Small enough that fast balls cannot tunnel through lines. */
   step: 1 / 120,
 } as const;

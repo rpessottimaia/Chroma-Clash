@@ -88,8 +88,8 @@ const maxX = ARENA.wallRight - BALL.radius;
 const midY = ARENA.height / 2;
 const maxHeading = CURVE.maxHeadingDeg * DEG;
 
-/** Advance the ball: curve, zigzag and acceleration, then side-wall bounces. */
-export function stepBall(ball: Ball, dt: number): void {
+/** Advance the ball: curve, zigzag and acceleration, then side-wall bounces (unless walls=false). */
+export function stepBall(ball: Ball, dt: number, walls = true): void {
   const prevY = ball.y;
 
   if (ball.accel > 0) {
@@ -136,6 +136,7 @@ export function stepBall(ball: Ball, dt: number): void {
     ball.sCurve = false;
   }
 
+  if (!walls) return;
   if (ball.x < minX) {
     ball.x = minX + (minX - ball.x);
     ball.vx = Math.abs(ball.vx);
@@ -151,17 +152,51 @@ export function stepBall(ball: Ball, dt: number): void {
  * Where the ball will cross the horizontal line `lineY`, found by simulating its flight
  * (curves make a closed form impractical). Returns the current x if it never gets there.
  */
-export function predictX(ball: Ball, lineY: number, dt = 1 / 60, maxTime = 5): number {
+export function predictX(ball: Ball, lineY: number, dt = 1 / 60, maxTime = 5, walls = true): number {
   if (ball.vy === 0 || (lineY - ball.y) / ball.vy < 0) return ball.x;
   const sim: Ball = { ...ball };
   for (let t = 0; t < maxTime; t += dt) {
     const prevY = sim.y;
     const prevX = sim.x;
-    stepBall(sim, dt);
+    stepBall(sim, dt, walls);
     if ((prevY - lineY) * (sim.y - lineY) <= 0) {
       const f = (lineY - prevY) / (sim.y - prevY || 1);
       return prevX + (sim.x - prevX) * f;
     }
   }
   return sim.x;
+}
+
+/** Seconds until the ball reaches the horizontal line `lineY` (Infinity if moving away). */
+export function timeTo(ball: Ball, lineY: number): number {
+  const t = (lineY - ball.y) / ball.vy;
+  return ball.vy === 0 || t < 0 ? Infinity : t;
+}
+
+/**
+ * Launch the ball so its curved flight (with its current curve, zigzag and acceleration)
+ * crosses `lineY` at `targetX`. Solves the launch angle by bisection on a wall-free
+ * simulation; walls only matter if the solved path leaves the court.
+ */
+export function launchAt(ball: Ball, speed: number, targetX: number, lineY: number, maxAngle: number): void {
+  const landing = (angle: number) => {
+    const sim: Ball = { ...ball };
+    launch(sim, speed, angle);
+    return predictX(sim, lineY, 1 / 120, 5, false);
+  };
+  // A curve too strong to reach the target is softened until the target is reachable.
+  for (let tries = 0; tries < 8; tries++) {
+    if (landing(-maxAngle) <= targetX && landing(maxAngle) >= targetX) break;
+    ball.curve *= 0.6;
+    if (tries === 7) ball.curve = 0;
+  }
+  // Landing x grows with the angle, so bisect for the one that hits the target.
+  let lo = -maxAngle;
+  let hi = maxAngle;
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    if (landing(mid) < targetX) lo = mid;
+    else hi = mid;
+  }
+  launch(ball, speed, (lo + hi) / 2);
 }

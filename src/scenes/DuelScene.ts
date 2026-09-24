@@ -83,10 +83,6 @@ export class DuelScene extends Phaser.Scene {
   private dragId: number | null = null;
   private anchorX = 0;
   private dragFromX = 0;
-  private downAt = 0;
-  private downX = 0;
-  private downY = 0;
-  private moved = false;
   private keys!: Record<'left' | 'right' | 'a' | 'd', Phaser.Input.Keyboard.Key>;
 
   constructor() {
@@ -142,13 +138,13 @@ export class DuelScene extends Phaser.Scene {
       player: text(this, W - 60, HP_BOTTOM_Y + 34, 20, '#e8f4ff').setOrigin(1, 0.5),
     };
     this.pipLabels = PIP_X.map((x) => text(this, x, PIP_Y + 50, 20));
-    this.msg = text(this, CX, 600, 84).setLetterSpacing(6).setDepth(10);
-    this.sub = text(this, CX, 720, 28).setLineSpacing(10).setDepth(10);
+    this.msg = text(this, CX, 480, 84).setLetterSpacing(6).setDepth(10);
+    this.sub = text(this, CX, 560, 26).setOrigin(0.5, 0).setLineSpacing(10).setDepth(10);
     if (settings.debug) this.fpsText = text(this, CX, HP_BOTTOM_Y + 34, 18, '#5d7087');
 
     const rc = COLORS[this.rival.color];
     this.msg.setText(`VS ${rc.name.toUpperCase()}`).setColor(hexString(rc.hex)).setShadow(0, 0, hexString(rc.hex), 24, true, true);
-    this.sub.setText(rc.identity.toLowerCase()).setColor('#8aa0b8');
+    this.sub.setText(`${rc.identity.toLowerCase()}\n\nTAP as the ring closes to CATCH\nSLIDE to dodge`).setColor('#8aa0b8');
 
     this.setupInput();
     if (settings.debug) (window as unknown as { __duelScene: DuelScene }).__duelScene = this;
@@ -186,7 +182,9 @@ export class DuelScene extends Phaser.Scene {
   private setupInput(): void {
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT', a: 'A', d: 'D' }) as typeof this.keys;
-    kb.on('keydown-SPACE', () => (this.phase === 'duel' ? this.cycle() : this.scene.restart()));
+    kb.on('keydown-SPACE', () => (this.phase === 'duel' ? this.duel.tryCatch('player') : this.scene.restart()));
+    kb.on('keydown-Q', () => this.cycle());
+    kb.on('keydown-E', () => this.cycle());
     kb.on('keydown-ENTER', () => { if (this.phase === 'over') this.scene.restart(); });
     kb.on('keydown-ESC', () => this.scene.start('Menu'));
     kb.on('keydown-ONE', () => this.arm(0));
@@ -199,29 +197,26 @@ export class DuelScene extends Phaser.Scene {
     this.input.on('pointerupoutside', (p: Phaser.Input.Pointer) => this.onUp(p));
   }
 
+  /** Every new touch is a catch attempt (or arms a pip); the first finger also becomes the slider. */
   private onDown(p: Phaser.Input.Pointer): void {
     if (this.phase !== 'duel') return;
-    if (this.dragId === null) {
-      this.beginDrag(p);
+    const pip = this.pipAt(p.x, p.y);
+    if (pip >= 0) {
+      this.arm(pip);
       return;
     }
-    // A second finger while one is sliding: switch power immediately.
-    this.tapAt(p.x, p.y);
+    this.duel.tryCatch('player');
+    if (this.dragId === null) this.beginDrag(p);
   }
 
   private beginDrag(p: Phaser.Input.Pointer): void {
     this.dragId = p.id;
     this.anchorX = p.x;
     this.dragFromX = this.targetX;
-    this.downAt = this.time.now;
-    this.downX = p.x;
-    this.downY = p.y;
-    this.moved = false;
   }
 
   private onMove(p: Phaser.Input.Pointer): void {
     if (p.id !== this.dragId || !p.isDown) return;
-    if (Math.abs(p.x - this.downX) > PLAYER.tapSlop || Math.abs(p.y - this.downY) > PLAYER.tapSlop) this.moved = true;
     const min = ARENA.wallLeft + ARENA.moveMargin;
     const max = ARENA.wallRight - ARENA.moveMargin;
     const want = this.dragFromX + (p.x - this.anchorX) * PLAYER.dragGain;
@@ -234,18 +229,13 @@ export class DuelScene extends Phaser.Scene {
   }
 
   private onUp(p: Phaser.Input.Pointer): void {
-    if (p.id !== this.dragId) return;
-    this.dragId = null;
-    if (this.phase === 'duel' && !this.moved && this.time.now - this.downAt <= PLAYER.tapMaxMs) this.tapAt(p.x, p.y);
+    if (p.id === this.dragId) this.dragId = null;
   }
 
-  /** A tap on a pip arms that slot; a tap anywhere else cycles. */
-  private tapAt(x: number, y: number): void {
-    if (y > PIP_Y - 70) {
-      const i = PIP_X.findIndex((px) => Math.abs(px - x) < PIP_GAP / 2);
-      if (i >= 0) return this.arm(i);
-    }
-    this.cycle();
+  /** Index of the power pip under a touch, or -1. */
+  private pipAt(x: number, y: number): number {
+    if (y < PIP_Y - 70) return -1;
+    return PIP_X.findIndex((px) => Math.abs(px - x) < PIP_GAP / 2);
   }
 
   private cycle(): void {
@@ -333,7 +323,15 @@ export class DuelScene extends Phaser.Scene {
       case 'ko':
         this.endDuel(e.winner);
         break;
-      case 'miss':
+      case 'whiff':
+        if (e.side === 'player') this.floatText(this.duel.fighters.player.x, ARENA.playerY - 90, 'TOO EARLY', 0x8aa0b8, 22);
+        break;
+      case 'dodge': {
+        const f = this.duel.fighters[e.side];
+        this.floatText(f.x, e.side === 'player' ? ARENA.playerY - 90 : ARENA.rivalY + 90, 'DODGE', 0xe8f4ff, 24);
+        break;
+      }
+      case 'pickup':
         break;
     }
   }
@@ -426,14 +424,9 @@ export class DuelScene extends Phaser.Scene {
     const player = duel.fighters.player;
     const rival = duel.fighters.rival;
 
-    // Reach bars: the bright middle is the perfect-catch zone.
-    const reach = duel.reachOf('player');
-    const reachY = ARENA.playerY + 40;
-    neonLine(a, player.x - reach, reachY, player.x + reach, reachY, wc, 0.3, 2);
-    neonLine(a, player.x - reach * CATCH.perfectZone, reachY, player.x + reach * CATCH.perfectZone, reachY, wc, 0.9, 4);
-    const rReach = duel.reachOf('rival');
-    a.lineStyle(2, SIDE_COLORS.rival, 0.22);
-    a.lineBetween(rival.x - rReach, ARENA.rivalY - 42, rival.x + rReach, ARENA.rivalY - 42);
+    // Catch rings: hands up glows; an incoming ball draws a ring that closes on you.
+    this.catchRing(a, 'player', ARENA.playerY, wc);
+    this.catchRing(a, 'rival', ARENA.rivalY, SIDE_COLORS.rival);
 
     // Fighters, with shield rings
     const pc = this.hurt.player > 0 ? 0xffffff : SIDE_COLORS.player;
@@ -506,6 +499,27 @@ export class DuelScene extends Phaser.Scene {
     t.fillCircle(ball.x, ball.y, r + 4);
     t.fillStyle(0xffffff, alpha);
     t.fillCircle(ball.x, ball.y, r - 2);
+  }
+
+  private catchRing(a: Phaser.GameObjects.Graphics, side: Side, y: number, color: number): void {
+    const duel = this.duel;
+    const f = duel.fighters[side];
+    const r = duel.catchRadiusOf(side);
+    if (f.catchTime > 0) {
+      neonCircle(a, f.x, y, r, color, 0.95, 4);
+    } else {
+      a.lineStyle(2, color, f.catchCooldown > 0 ? 0.08 : 0.22);
+      a.strokeCircle(f.x, y, r);
+    }
+    if (side !== 'player') return;
+    // Timing ring: shrinks onto your catch circle as the ball arrives. Tap as it closes.
+    const t = duel.incomingTime(side);
+    if (t > CATCH.pressZone) return;
+    const k = t / CATCH.pressZone;
+    const now = t <= CATCH.window;
+    const perfect = t <= CATCH.perfectWindow;
+    const ringColor = perfect ? 0xffffff : now ? color : 0x8aa0b8;
+    neonCircle(a, f.x, y, r + k * 260, ringColor, now ? 0.9 : 0.35 + (1 - k) * 0.3, now ? 4 : 2);
   }
 
   private statusLine(side: Side): string {
