@@ -33,6 +33,15 @@ export interface Ball {
   blind: boolean;
   /** Fake ball: never caught, never hits. */
   decoy: boolean;
+  /** First half of the flight: the ball turns to chase its target instead of curving. */
+  homing: boolean;
+  /** Where on the target's body it is aimed (units from their center). */
+  aimOffset: number;
+  /** Curve and zigzag held back until the ball commits. */
+  pendingCurve: number;
+  pendingZigzag: number;
+  /** Y at which an S-bend flips its curve. */
+  flipY: number;
 }
 
 export const DEG = Math.PI / 180;
@@ -42,6 +51,7 @@ export function newBall(x: number, y: number, owner: Side): Ball {
     x, y, vx: 0, vy: 0, owner, color: 'neutral', card: null, damage: 0,
     perfect: false, passed: false, curve: 0, sCurve: false, zigzag: 0, zigTimer: 0,
     accel: 0, ghost: false, blind: false, decoy: false,
+    homing: false, aimOffset: 0, pendingCurve: 0, pendingZigzag: 0, flipY: y,
   };
 }
 
@@ -58,6 +68,10 @@ export function clearThrow(ball: Ball): void {
   ball.accel = 0;
   ball.ghost = false;
   ball.blind = false;
+  ball.homing = false;
+  ball.aimOffset = 0;
+  ball.pendingCurve = 0;
+  ball.pendingZigzag = 0;
 }
 
 /** The side a ball is travelling toward. */
@@ -85,7 +99,6 @@ export function speedOf(ball: Ball): number {
 
 const minX = ARENA.wallLeft + BALL.radius;
 const maxX = ARENA.wallRight - BALL.radius;
-const midY = ARENA.height / 2;
 const maxHeading = CURVE.maxHeadingDeg * DEG;
 
 /** Advance the ball: curve, zigzag and acceleration, then side-wall bounces (unless walls=false). */
@@ -131,7 +144,7 @@ export function stepBall(ball: Ball, dt: number, walls = true): void {
   ball.x += ball.vx * dt;
   ball.y += ball.vy * dt;
 
-  if (ball.sCurve && (prevY - midY) * (ball.y - midY) <= 0 && prevY !== ball.y) {
+  if (ball.sCurve && !ball.homing && (prevY - ball.flipY) * (ball.y - ball.flipY) <= 0 && prevY !== ball.y) {
     ball.curve = -ball.curve * 1.3;
     ball.sCurve = false;
   }
@@ -165,6 +178,20 @@ export function predictX(ball: Ball, lineY: number, dt = 1 / 60, maxTime = 5, wa
     }
   }
   return sim.x;
+}
+
+/** Turn the ball's heading toward (targetX, lineY) by at most maxTurn radians, keeping its speed. */
+export function steerToward(ball: Ball, targetX: number, lineY: number, maxTurn: number): void {
+  const dy = Math.abs(lineY - ball.y);
+  if (dy < 1) return;
+  const want = Math.atan2(targetX - ball.x, dy);
+  const have = Math.atan2(ball.vx, Math.abs(ball.vy));
+  const turn = Math.max(-maxTurn, Math.min(maxTurn, want - have));
+  const heading = Math.max(-maxHeading, Math.min(maxHeading, have + turn));
+  const sp = speedOf(ball);
+  const dirY = Math.sign(ball.vy) || 1;
+  ball.vx = Math.sin(heading) * sp;
+  ball.vy = dirY * Math.cos(heading) * sp;
 }
 
 /** Seconds until the ball reaches the horizontal line `lineY` (Infinity if moving away). */

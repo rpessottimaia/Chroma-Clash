@@ -72,7 +72,10 @@ export class RivalAI {
         const tracked: Ball = (this.tracking >= 0 && duel.decoys[this.tracking]) || ball;
         this.predicted = predictX(tracked, lineY('rival'));
       }
-      if (this.plan === 'dodge') {
+      if (ball.homing && this.tracking < 0) {
+        // Still being chased: dodging now is pointless, just hold and read.
+        target = duel.fighters.rival.x;
+      } else if (this.plan === 'dodge') {
         target = this.predicted + this.dodgeDir * (CATCH.bodyRadius + BALL.radius + 60);
         if (target < 90 || target > 630) target = this.predicted - this.dodgeDir * (CATCH.bodyRadius + BALL.radius + 60);
       } else {

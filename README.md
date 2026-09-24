@@ -10,7 +10,7 @@ Build a deck of 3 to 7 cards from five color decks (Surge, Phase, Void, Growth, 
 
 It's dodgeball: every throw is aimed at your body.
 
-- **Tap to catch** as the ring closes on you. A late tap is a perfect catch (+25% damage); too early and you fumble. A catch throws the ball back with your armed power.
+- **The ball chases you**, then commits to a spot on your body and a landing marker appears. **Slide under the marker** so it's in your hands (the center of your chevron) and **tap to catch** as it closes. A late tap is a perfect catch (+25% damage); too early and you fumble. A catch throws the ball back with your armed power.
 - **Slide** a thumb to move. Slide out of the way to **dodge**: safe, but you only get a plain throw back.
 - **Get hit** and you lose HP; the ball bounces back at the thrower, who must catch or dodge it.
 - **Tap a pip** at the bottom to arm that power. The world takes its color.

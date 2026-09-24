@@ -37,9 +37,9 @@ export const BALL = {
 
 export const CATCH = {
   /** A ball closer than this to your center hits you (plus the ball's radius). */
-  bodyRadius: 50,
-  /** With hands up, you catch balls this close to your center. */
-  catchRadius: 84,
+  bodyRadius: 60,
+  /** Your hands: with hands up, you catch balls this close to your center (plus the ball's radius). */
+  handsRadius: 22,
   /** Hands stay up this long after a tap: the ball must arrive inside it. */
   window: 0.3,
   /** After a tap you can't tap again for this long (a fumble leaves you exposed). */
@@ -49,18 +49,21 @@ export const CATCH = {
   perfectDamageMul: 1.25,
   /** Taps only count when the incoming ball is at most this many seconds away. */
   pressZone: 0.9,
-} as const;
+} as const
 
 /** Throwing: every throw is aimed at the opponent's body. */
 export const AIM = {
   /** Widest launch angle, degrees from vertical. */
   maxDeg: 55,
-  /** Random miss distance (+/- units) around the target. */
-  playerError: 16,
-  rivalError: 26,
-  /** Fraction of the target's sideways velocity x flight time to lead by. */
-  playerLead: 0.25,
-  rivalLead: 0.5,
+  /** Every throw lands on the body but off the hands: offset range from the target's center. */
+  minOffset: 20,
+  maxOffset: 62,
+  /** Fraction of the target's sideways velocity x remaining flight time to lead by at commit. */
+  lead: 0.35,
+  /** While homing, the ball turns toward its target at up to this many rad/s. */
+  homingTurn: 1.6,
+  /** The ball commits (stops chasing, starts its curve) this far from the target's line. */
+  commitDistance: 520,
 } as const
 
 /** Curved flight: every throw bends a little, and cards bend it a lot. Curve is in rad/s of heading change. */
@@ -85,7 +88,7 @@ export const CURVE = {
 export const STATUS = {
   /** Movement speed multiplier while slowed. */
   slowMul: 0.5,
-  /** Catch radius multiplier while a reach boost (Halo) is active. */
+  /** Hands radius multiplier while a reach boost (Halo) is active. */
   reachMul: 1.4,
   /** Rival AI error multipliers when it can't read the ball well. */
   blindErrorMul: 2.2,

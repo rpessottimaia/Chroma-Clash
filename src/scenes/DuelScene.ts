@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { ARENA, BALL, CATCH, DUEL, FX, PLAYER } from '../config';
 import { RivalAI, makeRivalLoadout, type RivalLoadout } from '../ai/rival';
-import { targetOf, type Ball, type Side } from '../core/ball';
+import { predictX, targetOf, type Ball, type Side } from '../core/ball';
 import { CARDS } from '../core/cards';
 import { COLORS, SIDE_COLORS } from '../core/colors';
 import { Duel, type DuelEvent } from '../core/duel';
@@ -144,7 +144,7 @@ export class DuelScene extends Phaser.Scene {
 
     const rc = COLORS[this.rival.color];
     this.msg.setText(`VS ${rc.name.toUpperCase()}`).setColor(hexString(rc.hex)).setShadow(0, 0, hexString(rc.hex), 24, true, true);
-    this.sub.setText(`${rc.identity.toLowerCase()}\n\nTAP as the ring closes to CATCH\nSLIDE to dodge`).setColor('#8aa0b8');
+    this.sub.setText(`${rc.identity.toLowerCase()}\n\nSLIDE under the marker, TAP as it closes\nto CATCH, or slide away to dodge`).setColor('#8aa0b8');
 
     this.setupInput();
     if (settings.debug) (window as unknown as { __duelScene: DuelScene }).__duelScene = this;
@@ -234,8 +234,8 @@ export class DuelScene extends Phaser.Scene {
 
   /** Index of the power pip under a touch, or -1. */
   private pipAt(x: number, y: number): number {
-    if (y < PIP_Y - 70) return -1;
-    return PIP_X.findIndex((px) => Math.abs(px - x) < PIP_GAP / 2);
+    // Only a tap right on a pip arms it; everywhere else (including the bottom edge) is a catch.
+    return PIP_X.findIndex((px) => Math.hypot(px - x, PIP_Y - y) < 52);
   }
 
   private cycle(): void {
@@ -427,6 +427,7 @@ export class DuelScene extends Phaser.Scene {
     // Catch rings: hands up glows; an incoming ball draws a ring that closes on you.
     this.catchRing(a, 'player', ARENA.playerY, wc);
     this.catchRing(a, 'rival', ARENA.rivalY, SIDE_COLORS.rival);
+    this.landingMarkers(a, wc);
 
     // Fighters, with shield rings
     const pc = this.hurt.player > 0 ? 0xffffff : SIDE_COLORS.player;
@@ -501,25 +502,45 @@ export class DuelScene extends Phaser.Scene {
     t.fillCircle(ball.x, ball.y, r - 2);
   }
 
+  /** Body (faint) and hands (bright when up) around a fighter. */
   private catchRing(a: Phaser.GameObjects.Graphics, side: Side, y: number, color: number): void {
     const duel = this.duel;
     const f = duel.fighters[side];
-    const r = duel.catchRadiusOf(side);
+    a.lineStyle(2, color, 0.12);
+    a.strokeEllipse(f.x, y, CATCH.bodyRadius * 2, CATCH.bodyRadius * 1.3);
+    const hands = duel.handsOf(side) - BALL.radius;
     if (f.catchTime > 0) {
-      neonCircle(a, f.x, y, r, color, 0.95, 4);
+      neonCircle(a, f.x, y, hands + 6, color, 1, 4);
     } else {
-      a.lineStyle(2, color, f.catchCooldown > 0 ? 0.08 : 0.22);
-      a.strokeCircle(f.x, y, r);
+      neonCircle(a, f.x, y, hands, color, f.catchCooldown > 0 ? 0.15 : 0.5, 2);
     }
-    if (side !== 'player') return;
-    // Timing ring: shrinks onto your catch circle as the ball arrives. Tap as it closes.
-    const t = duel.incomingTime(side);
-    if (t > CATCH.pressZone) return;
-    const k = t / CATCH.pressZone;
-    const now = t <= CATCH.window;
-    const perfect = t <= CATCH.perfectWindow;
-    const ringColor = perfect ? 0xffffff : now ? color : 0x8aa0b8;
-    neonCircle(a, f.x, y, r + k * 260, ringColor, now ? 0.9 : 0.35 + (1 - k) * 0.3, now ? 4 : 2);
+  }
+
+  /**
+   * Landing marker: once a ball stops chasing you it shows where it will land, closing as it
+   * arrives. Bright when it's heading into your hands, pink when it's going to hit your body.
+   * Darkness and ghost balls hide it; decoys get one too.
+   */
+  private landingMarkers(a: Phaser.GameObjects.Graphics, wc: number): void {
+    const duel = this.duel;
+    const me = duel.fighters.player;
+    const balls = [duel.ball, ...duel.decoys];
+    for (const b of balls) {
+      if (b.homing || b.passed || b.blind || b.ghost || duel.pickup) continue;
+      if (b.decoy ? b.owner !== 'rival' : duel.incomingTime('player') === Infinity) continue;
+      const t = (ARENA.playerY - b.y) / b.vy;
+      if (!(t > 0) || t > 1.2) continue;
+      const lx = predictX(b, ARENA.playerY);
+      const d = Math.abs(lx - me.x);
+      const inHands = d <= duel.handsOf('player');
+      const onBody = d <= CATCH.bodyRadius + BALL.radius;
+      const col = inHands ? wc : onBody ? 0xff6b8a : 0x8aa0b8;
+      const k = Math.min(1, t / 1.2);
+      const closing = t <= CATCH.window;
+      neonCircle(a, lx, ARENA.playerY, 16 + k * 110, closing && inHands ? 0xffffff : col, closing ? 0.95 : 0.55, closing ? 4 : 2);
+      a.fillStyle(col, 0.8);
+      a.fillCircle(lx, ARENA.playerY, 5);
+    }
   }
 
   private statusLine(side: Side): string {

@@ -1,6 +1,7 @@
 import { AIM, ARENA, BALL, CATCH, CURVE, DUEL, HIT, PLAYER, RIVAL, STATUS } from '../config';
 import {
-  DEG, clearThrow, launchAt, newBall, other, rallySpeed, stepBall, targetOf, timeTo, type Ball, type Side,
+  DEG, clearThrow, launch, launchAt, newBall, other, rallySpeed, speedOf, steerToward, stepBall, targetOf, timeTo,
+  type Ball, type Side,
 } from './ball';
 import type { Card, CardFx, CardId } from './cards';
 import type { BallColor } from './colors';
@@ -108,8 +109,9 @@ export class Duel {
     return rallySpeed(this.touches, this.elapsed, this.hitBonus);
   }
 
-  catchRadiusOf(side: Side): number {
-    return CATCH.catchRadius * (this.fighters[side].reachTime > 0 ? STATUS.reachMul : 1);
+  /** How far from your center a ball can be and still land in your hands. */
+  handsOf(side: Side): number {
+    return CATCH.handsRadius * (this.fighters[side].reachTime > 0 ? STATUS.reachMul : 1) + BALL.radius;
   }
 
   /** Seconds until the live ball reaches `side`, or Infinity if it isn't coming at them. */
@@ -177,10 +179,15 @@ export class Duel {
     }
 
     const ball = this.ball;
+    const target = targetOf(ball);
+    if (ball.homing && !ball.passed) {
+      // First half of the flight: chase the target, then commit to a final curved line.
+      steerToward(ball, this.fighters[target].x + ball.aimOffset, lineY(target), AIM.homingTurn * dt);
+      if (Math.abs(lineY(target) - ball.y) <= AIM.commitDistance) this.commit();
+    }
     const prevY = ball.y;
     stepBall(ball, dt);
 
-    const target = targetOf(ball);
     if (!ball.passed && crossed(prevY, ball.y, lineY(target))) {
       this.arrive(target);
       return;
@@ -199,8 +206,8 @@ export class Duel {
     const ball = this.ball;
     const f = this.fighters[side];
     const dx = Math.abs(ball.x - f.x);
-    if (f.catchTime > 0 && dx <= this.catchRadiusOf(side)) {
-      this.catchBall(side, (ball.x - f.x) / this.catchRadiusOf(side), f.sincePress <= CATCH.perfectWindow);
+    if (f.catchTime > 0 && dx <= this.handsOf(side)) {
+      this.catchBall(side, (ball.x - f.x) / this.handsOf(side), f.sincePress <= CATCH.perfectWindow);
     } else if (dx <= CATCH.bodyRadius + BALL.radius) {
       this.hit(side);
     } else {
@@ -234,14 +241,43 @@ export class Duel {
     if (crossed(prevY, d.y, lineY(targetOf(d)))) d.passed = true;
   }
 
-  /** Aim the live ball from `side` at the other fighter's body (with lead and error). */
-  private throwAt(side: Side, speed: number, error: number, lead: number): void {
+  /**
+   * Send the live ball from `side` at the other fighter. It homes on them first (curve and
+   * zigzag held back), aiming at a point on their body but off their hands.
+   */
+  private send(side: Side, speed: number): void {
     const ball = this.ball;
-    const foe = this.fighters[other(side)];
-    const flight = Math.abs(lineY(other(side)) - ball.y) / Math.max(1, speed);
-    const aimX = foe.x + foe.vx * flight * lead + (this.rng() * 2 - 1) * error;
-    launchAt(ball, speed, aimX, lineY(other(side)), AIM.maxDeg * DEG);
+    const foeSide = other(side);
+    const foe = this.fighters[foeSide];
+    const sign = this.rng() < 0.5 ? -1 : 1;
+    ball.owner = side;
+    ball.aimOffset = sign * (AIM.minOffset + this.rng() * (AIM.maxOffset - AIM.minOffset));
+    ball.pendingCurve = ball.curve;
+    ball.pendingZigzag = ball.zigzag;
+    ball.curve = 0;
+    ball.zigzag = 0;
+    ball.homing = true;
+    const dy = Math.abs(lineY(foeSide) - ball.y);
+    const maxA = AIM.maxDeg * DEG;
+    launch(ball, speed, Math.max(-maxA, Math.min(maxA, Math.atan2(foe.x + ball.aimOffset - ball.x, dy))));
     this.launches++;
+  }
+
+  /** Stop chasing: lock the landing point (leading a moving target) and release the curve. */
+  private commit(): void {
+    const ball = this.ball;
+    const side = targetOf(ball);
+    const f = this.fighters[side];
+    const line = lineY(side);
+    ball.homing = false;
+    ball.curve = ball.pendingCurve;
+    ball.zigzag = ball.pendingZigzag;
+    ball.flipY = ball.y + (line - ball.y) * 0.45;
+    const t = Math.abs(line - ball.y) / Math.max(1, Math.abs(ball.vy));
+    const min = ARENA.wallLeft + BALL.radius + 4;
+    const max = ARENA.wallRight - BALL.radius - 4;
+    const x = Math.max(min, Math.min(max, f.x + f.vx * t * AIM.lead + ball.aimOffset));
+    launchAt(ball, speedOf(ball), x, line, AIM.maxDeg * DEG);
   }
 
   private serve(): void {
@@ -252,7 +288,7 @@ export class Duel {
     clearThrow(ball);
     ball.damage = HIT.plainDamage;
     ball.curve = (this.rng() * 2 - 1) * CURVE.jitter * 3;
-    this.throwAt('rival', this.speed, 0, 0);
+    this.send('rival', this.speed);
     this.state = 'play';
     this.events.push({ type: 'serve' });
   }
@@ -270,7 +306,7 @@ export class Duel {
     const f = this.fighters[side];
     const speed = this.speed * f.nextThrowMul;
     f.nextThrowMul = 1;
-    this.throwAt(side, speed, side === 'player' ? AIM.playerError : AIM.rivalError, side === 'player' ? AIM.playerLead : AIM.rivalLead);
+    this.send(side, speed);
   }
 
   private catchBall(side: Side, offset: number, perfect: boolean): void {
@@ -342,8 +378,7 @@ export class Duel {
 
     const speed = this.speed * (fizzled ? 1 : card.speedMul) * me.nextThrowMul;
     me.nextThrowMul = 1;
-    const isPlayer = side === 'player';
-    this.throwAt(side, speed, (isPlayer ? AIM.playerError : AIM.rivalError) * (perfect ? 0.5 : 1), isPlayer ? AIM.playerLead : AIM.rivalLead);
+    this.send(side, speed);
 
     for (let i = 0; i < (fx.decoys ?? 0); i++) this.spawnDecoy(i);
 
@@ -353,14 +388,15 @@ export class Duel {
 
   private spawnDecoy(i: number): void {
     const b = this.ball;
-    const d: Ball = { ...b, decoy: true, passed: false };
+    const d: Ball = { ...b, decoy: true, passed: false, homing: false, curve: b.pendingCurve, zigzag: b.pendingZigzag };
     // Fan out to one side of the real ball, with its own bend.
     const spread = (i % 2 === 0 ? -1 : 1) * (0.25 + this.rng() * 0.2);
     const s = Math.hypot(b.vx, b.vy);
     const a = Math.atan2(b.vx, Math.abs(b.vy)) + spread;
     d.vx = Math.sin(a) * s;
     d.vy = Math.sign(b.vy) * Math.cos(a) * s;
-    d.curve = -b.curve * 0.5 - spread * 0.8;
+    d.curve = -b.pendingCurve * 0.5 - spread * 0.8;
+    d.flipY = b.y + (lineY(targetOf(b)) - b.y) * 0.5;
     this.decoys.push(d);
   }
 
@@ -401,7 +437,7 @@ export class Duel {
     clearThrow(ball);
     ball.damage = HIT.ricochetDamage;
     ball.curve = (this.rng() * 2 - 1) * CURVE.jitter;
-    this.throwAt(victim, this.speed, AIM.rivalError, 0);
+    this.send(victim, this.speed);
   }
 
   private ko(winner: Side): void {

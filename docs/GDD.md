@@ -32,7 +32,8 @@ flowchart LR
   E --> A
 ```
 
-- **Catch (high reward):** tap just before impact. A timing ring closes on you as the ball arrives; tapping in its last moment is a perfect catch (+25% damage). Tapping too early fumbles: your hands drop, there is a short cooldown, and the ball usually hits you.
+- **The ball hunts you:** for the first half of its flight it turns to chase you, so moving early is pointless. Then it *commits*: it stops chasing, releases its curve, and flies to a point on your body but off your hands. A landing marker appears on your line at that moment (pink = it will hit your body, bright = it's in your hands).
+- **Catch (high reward):** slide so the marker is in your hands, then tap just before impact. A timing ring closes on you as the ball arrives; tapping in its last moment is a perfect catch (+25% damage). Tapping too early fumbles: your hands drop, there is a short cooldown, and the ball usually hits you.
 - **Dodge (safe):** slide out of the ball's path. You take no damage, but you only pick the ball up off the back wall and throw it plain, with no power.
 - **Hit:** the ball deals its damage and bounces straight back at the thrower, who must now catch or dodge it. The ball never resets to center.
 - **Speed ramp:** each duel starts genuinely slow so everything is readable, then speed climbs with every throw and with time. It never drops back within a duel.
@@ -45,14 +46,14 @@ Touch only: slide to move (and dodge), tap to catch.
 | Action | Gesture | Notes |
 | --- | --- | --- |
 | Move / dodge | Keep a thumb on the screen and slide left or right | Player follows the thumb like a slider |
-| Catch | Tap anywhere (a second finger works while sliding) | Only counts while a ball is close; time it to the closing ring |
+| Catch | Slide under the landing marker, then tap anywhere (a second finger works while sliding) | Only counts while a ball is close; only your hands (the chevron's center) catch |
 | Arm a power | Tap one of the three pips at the bottom | Desktop: 1/2/3 or Q/E to cycle |
 | Throw | Automatic | A catch throws back at the rival's body with the armed power |
 
 - **Power slots:** you hold up to 3 powers, shown as three glowing pips at the bottom of the screen.
 - **Color feedback:** the whole world (court lines, dots, your glow) shifts to the armed power's color, so you never need to look at the UI.
 - **Refill:** a thrown power is spent, and its slot refills with the next card from your deck.
-- **Aim is automatic:** every throw lands on the target's body (leading a moving target). Curves bend the path but still arrive; the skill is timing and reading, not aiming.
+- **Aim is automatic:** every throw chases the target, then commits to land on their body but off their hands. The skill is reading the committed curve, sliding under it and timing the tap; standing still gets you hit.
 - **Curved flight:** catching off-center or while moving adds curve, every throw gets a little spin, and cards add big arcs, S-bends and zigzags.
 
 ## Color system

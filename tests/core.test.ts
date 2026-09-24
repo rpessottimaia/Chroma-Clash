@@ -26,9 +26,11 @@ function runUntil(duel: Duel, type: DuelEvent['type'], each?: () => void, maxSte
   throw new Error(`no ${type} event`);
 }
 
-/** Stand still and tap just before impact. */
+/** Slide under the ball once it commits, and tap just before impact. */
 const catcher = (duel: Duel, side: Side, lead = 0.05) => () => {
-  if (duel.incomingTime(side) <= lead) duel.tryCatch(side);
+  const t = duel.incomingTime(side);
+  if (t < Infinity && !duel.ball.homing) duel.moveTo(side, predictX(duel.ball, lineY(side), 1 / 240));
+  if (t <= lead) duel.tryCatch(side);
 };
 /** Never tap: get hit (the ball is aimed at you). */
 const idle = () => {};
@@ -82,12 +84,12 @@ describe('ball flight', () => {
 
   it('aims a curving throw so it still lands on the target', () => {
     for (const [curve, target] of [[1.4, 200], [-1.6, 520], [0.9, 360], [0, 150]] as const) {
-      const b = { ...newBall(360, lineY('player'), 'player'), curve, sCurve: curve === 0.9 };
+      const b = { ...newBall(360, lineY('player'), 'player'), curve, sCurve: curve === 0.9, flipY: 745 };
       launchAt(b, 900, target, lineY('rival'), 55 * DEG);
       const sim = { ...b };
       while (sim.y > lineY('rival')) stepBall(sim, DUEL.step);
       expect(Math.abs(sim.x - target)).toBeLessThan(6);
-      expect(Math.abs(predictX(b, lineY('rival')) - target)).toBeLessThan(6);
+      expect(Math.abs(predictX(b, lineY('rival'), DUEL.step) - target)).toBeLessThan(6);
     }
   });
 });
@@ -190,6 +192,43 @@ describe('dodgeball rules', () => {
     }
     expect(counts.catch).toBeGreaterThan(3);
     expect(counts.hit).toBeGreaterThan(0);
+  });
+});
+
+describe('movement matters', () => {
+  it('the ball chases a moving target until it commits', () => {
+    const duel = newDuel();
+    runUntil(duel, 'catch', catcher(duel, 'player'));
+    expect(duel.ball.homing).toBe(true);
+    const before = duel.ball.vx;
+    duel.moveTo('rival', 640);
+    for (let i = 0; i < 20; i++) duel.step(DUEL.step);
+    expect(duel.ball.vx).toBeGreaterThan(before);
+  });
+
+  it('standing still and tapping on time no longer wins: most throws hit you', () => {
+    let caught = 0;
+    let hit = 0;
+    for (let seed = 0; seed < 40; seed++) {
+      const duel = newDuel(seed);
+      for (let i = 0; i < 20000; i++) {
+        if (duel.incomingTime('player') <= 0.05) duel.tryCatch('player');
+        duel.step(DUEL.step);
+        const ev = duel.drainEvents();
+        if (ev.some((e) => e.type === 'catch' && e.side === 'player')) { caught++; break; }
+        if (ev.some((e) => e.type === 'hit' && e.victim === 'player')) { hit++; break; }
+      }
+    }
+    expect(caught + hit).toBe(40);
+    expect(hit).toBeGreaterThan(caught);
+  });
+
+  it('sliding under the ball catches every time', () => {
+    for (let seed = 0; seed < 15; seed++) {
+      const duel = newDuel(seed);
+      const ev = runUntil(duel, 'catch', catcher(duel, 'player'));
+      expect(ev.some((e) => e.type === 'hit')).toBe(false);
+    }
   });
 });
 
