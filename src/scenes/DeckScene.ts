@@ -78,7 +78,7 @@ export class DeckScene extends Phaser.Scene {
     this.toast = text(this, CX, DECK_Y + 96, 20, '#ff6b8a');
 
     button(this, 150, 1460, 220, 96, 'BACK', 0xe8f4ff, () => this.scene.start('Menu'), 28);
-    this.play = button(this, 470, 1460, 380, 96, '▶  PLAY', SIDE_COLORS.player, () => this.scene.start('Duel'), 36);
+    this.play = button(this, 470, 1460, 380, 96, 'DONE', SIDE_COLORS.player, () => this.scene.start('Menu'), 36);
 
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('Menu'));
     this.add.tileSprite(0, 0, ARENA.width, ARENA.height, 'scanlines').setOrigin(0).setDepth(30).setAlpha(0.2);

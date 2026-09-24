@@ -4,6 +4,15 @@ A fast neon 1v1 ball duel for phones. The ball never stops bouncing between you 
 
 The full design is in [`docs/GDD.md`](docs/GDD.md).
 
+## Prototypes (current build)
+
+The menu has two real-time modes to compare. Both use your deck and show your power card at the bottom:
+
+- **A · Strike:** one ball in a shared arena. Drag to move anywhere, tap when the ball is in your ring to strike it at the rival. 3 strikes charge your power card.
+- **B · Dodgeball:** three balls. Walk over one to grab it (it carries your power card), tap to throw. Empty hands? Touch as a ball hits you to catch it.
+
+The lane-based mode described below is retired from the menu while the prototypes are tested.
+
 ## How to play
 
 Build a deck of 3 to 7 cards from five color decks (Surge, Phase, Void, Growth, Aegis; 8 cards each) on the **Edit deck** screen. Your deck is saved on your device. Then hit **Play** to face a color-themed rival.

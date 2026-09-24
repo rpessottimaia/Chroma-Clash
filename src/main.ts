@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { ARENA } from './config';
+import { ArenaScene } from './scenes/ArenaScene';
 import { BootScene } from './scenes/BootScene';
 import { DeckScene } from './scenes/DeckScene';
 import { DuelScene } from './scenes/DuelScene';
@@ -29,5 +30,5 @@ new Phaser.Game({
   fps: {
     target: 60,
   },
-  scene: [BootScene, MenuScene, DeckScene, DuelScene],
+  scene: [BootScene, MenuScene, DeckScene, DuelScene, ArenaScene],
 });

@@ -5,6 +5,7 @@ import { COLORS, SIDE_COLORS } from '../core/colors';
 import { hexString, neonCircle } from '../fx/neon';
 import { addDots, button, drawRings, text } from '../fx/ui';
 import { loadProfile } from '../meta/profile';
+import { ARENA_MODES } from './ArenaScene';
 import { setReduceFlashes, settings } from '../settings';
 
 const CX = ARENA.width / 2;
@@ -39,16 +40,21 @@ export class MenuScene extends Phaser.Scene {
       text(this, x, 785, 15, hexString(col), CARDS[id].name.toUpperCase().slice(0, 8));
     });
 
-    button(this, CX, 930, 440, 116, '▶  PLAY', SIDE_COLORS.player, () => this.scene.start('Duel'), 44);
-    button(this, CX, 1080, 440, 92, 'EDIT DECK', 0xe8f4ff, () => this.scene.start('Deck'), 30);
+    // Two prototypes to compare on a phone.
+    ARENA_MODES.forEach((m, i) => {
+      const y = 900 + i * 150;
+      button(this, CX, y, 520, 104, `▶  ${m.title}`, SIDE_COLORS.player, () => this.scene.start('Arena', { mode: m.mode }), 34);
+      text(this, CX, y + 70, 18, '#5d7087', m.blurb);
+    });
+    button(this, CX, 1210, 360, 80, 'EDIT DECK', 0xe8f4ff, () => this.scene.start('Deck'), 26);
 
     const games = profile.wins + profile.losses;
     if (games > 0) {
-      text(this, CX, 1210, 22, '#8aa0b8',
+      text(this, CX, 1300, 22, '#8aa0b8',
         `WINS ${profile.wins} · LOSSES ${profile.losses}${profile.bestSpeed ? ` · TOP SPEED ${profile.bestSpeed.toFixed(1)}x` : ''}`);
     }
 
-    const toggle = text(this, CX, 1300, 22, '#8aa0b8');
+    const toggle = text(this, CX, 1360, 22, '#8aa0b8');
     const renderToggle = () => {
       const forced = settings.reduceMotion ? ' (system)' : '';
       toggle.setText(`[ reduce flashes: ${settings.reduceFlashes || settings.reduceMotion ? 'ON' : 'OFF'}${forced} ]`);
@@ -59,10 +65,10 @@ export class MenuScene extends Phaser.Scene {
       renderToggle();
     });
 
-    text(this, CX, 1440, 22, '#5d7087', 'slide to move · tap to switch power\ncatching is automatic').setLineSpacing(8);
+    text(this, CX, 1450, 22, '#5d7087', 'two prototypes · both use your deck\nplay each, then tell me which feels right').setLineSpacing(8);
 
-    this.input.keyboard?.on('keydown-ENTER', () => this.scene.start('Duel'));
-    this.input.keyboard?.on('keydown-SPACE', () => this.scene.start('Duel'));
+    this.input.keyboard?.on('keydown-ONE', () => this.scene.start('Arena', { mode: 'strike' }));
+    this.input.keyboard?.on('keydown-TWO', () => this.scene.start('Arena', { mode: 'dodge' }));
     this.input.keyboard?.on('keydown-D', () => this.scene.start('Deck'));
     this.add.tileSprite(0, 0, ARENA.width, ARENA.height, 'scanlines').setOrigin(0).setDepth(30).setAlpha(0.2);
   }

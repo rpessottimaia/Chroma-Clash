@@ -153,3 +153,88 @@ export const FX = {
   /** Seconds for the world tint to fade to a newly armed color. */
   colorShiftTime: 0.14,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Arena modes (prototypes A and B). Both use the full court and 2D movement.
+
+/** The court both arena modes play in. */
+export const COURT = {
+  left: 36,
+  right: 684,
+  top: 150,
+  bottom: 1340,
+  /** Midline between the halves (dodgeball only). */
+  mid: 745,
+} as const;
+
+export const MOVE = {
+  /** Fighter body radius: balls closer than this (plus their radius) hit you. */
+  bodyRadius: 44,
+  /** Player top speed toward the finger target, and the rival's top speed. */
+  playerSpeed: 1600,
+  rivalSpeed: 820,
+  /** Drag gain: 1 = the fighter moves exactly as far as the thumb. */
+  dragGain: 1.35,
+  keySpeed: 900,
+} as const;
+
+/** Prototype A: one loose ball in a shared arena; strike it at the rival. */
+export const STRIKE = {
+  ballRadius: 15,
+  baseSpeed: 620,
+  rampPerHit: 30,
+  rampPerSecond: 3,
+  maxSpeed: 2100,
+  /** Tap to strike when the ball is inside this ring around you. */
+  swingRadius: 125,
+  /** Inner fraction of the ring that counts as a sweet-spot strike (+25% damage). */
+  sweetSpot: 0.45,
+  /** A tap with the ball out of range does nothing; after a strike you wait this long. */
+  swingCooldown: 0.2,
+  /** Charge per strike; a full meter makes the next strike fire your power card. */
+  meterPerHit: 0.34,
+  /** After hitting someone the ball goes neutral (harmless, slower) for this long. */
+  neutralTime: 0.7,
+  neutralSpeedMul: 0.5,
+  /** A struck ball that misses goes neutral after this many wall bounces. */
+  bouncesToNeutral: 3,
+  /** Plain strike damage: base plus this per unit of speed over base. */
+  baseDamage: 6,
+  speedDamage: 1 / 150,
+  /** Speed of the neutral ball at the start. */
+  drift: 180,
+} as const;
+
+/** Prototype B: dodgeball with three balls and a midline. */
+export const DODGE = {
+  balls: 3,
+  ballRadius: 14,
+  baseSpeed: 760,
+  rampPerThrow: 14,
+  rampPerSecond: 3,
+  maxSpeed: 2000,
+  /** Walk within this of a ball on your side to pick it up. */
+  pickupReach: 16,
+  /** Tap with a ball close: hands up this long. */
+  catchWindow: 0.28,
+  catchCooldown: 0.5,
+  /** Extra reach of your hands beyond your body when catching. */
+  catchReach: 26,
+  throwCooldown: 0.25,
+  /** Ground balls slow down by this factor per second. */
+  friction: 2.4,
+  plainDamage: 8,
+  /** Catching a ball stings the thrower for this much. */
+  caughtDamage: 6,
+  /** Fraction of the target's velocity x flight time to lead throws by. */
+  lead: 0.4,
+} as const;
+
+export const ARENA_AI = {
+  strikeSkill: 0.6,
+  dodgeSkill: 0.55,
+  reaction: 0.16,
+  /** Seconds the dodgeball rival holds a ball before throwing (min, max). */
+  holdMin: 0.35,
+  holdMax: 0.9,
+} as const;

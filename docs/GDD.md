@@ -17,6 +17,15 @@ Chroma Clash is a fast neon 1v1 ball duel for phones, where a ball never stops b
 
 **Scope:** the MVP is a single-player roguelike against AI rivals, running fully client-side with no server. Online 1v1 against real players (lobby and invites) is the follow-up, built on the same game core.
 
+## Prototypes in test (core loop not final)
+
+Playtests showed the lane-based rally still read as Pong: one ball taking turns, one predictable threat, and powers that were hard to see. Two real-time prototypes are on the menu to compare on a phone. Both use 2D movement in the whole court, the deck builder, and a power card panel that always shows your power and what it does.
+
+- **A · Strike (shared arena):** one loose ball bouncing off all four walls. Drag to move anywhere; tap while the ball is inside your ring to strike it at the rival (it leads them and curves by card). Your struck ball hurts the rival on contact and theirs hurts you; after a hit, or three wall bounces, the ball goes neutral and whoever reaches it next strikes it. Three strikes charge your meter, and the next strike fires your power card. The rally speed only climbs.
+- **B · Dodgeball (three balls):** three balls start on the midline. Walk over a ball on your side to grab it; it is loaded with your next power card. Tap to throw it (aimed at the rival, curve-corrected). With empty hands, touch as a ball reaches you to catch it: you keep it and the thrower takes 6 damage. Hits and misses drop the ball on the target's side, so balls keep flowing both ways and both players act at once.
+
+The sections below describe the earlier lane-based design and will be rewritten once a prototype is chosen.
+
 ## Core loop and flow
 
 A duel is dodgeball, one on one: every throw is aimed at your body. You either catch it, dodge it, or take the hit.
