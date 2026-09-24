@@ -19,38 +19,41 @@ Chroma Clash is a fast neon 1v1 ball duel for phones, where a ball never stops b
 
 ## Core loop and flow
 
-A duel is one continuous rally: the ball is always moving, and the only way to win is to land hits until the rival's HP hits zero.
+A duel is dodgeball, one on one: every throw is aimed at your body. You either catch it, dodge it, or take the hit.
 
 ```mermaid
 flowchart LR
-  A[Read incoming<br/>ball color] --> B[Slide into position]
-  B --> C[Tap to arm<br/>the right power]
-  C --> D[Catch]
-  D --> E[Power fires<br/>on the throw back]
+  A[Ball flies at you<br/>read its color and curve] --> B{Tap as the<br/>ring closes?}
+  B -- in time --> C[Catch: your armed<br/>power fires on the throw back]
+  B -- no, but you slid away --> D[Dodge: pick it up,<br/>plain throw back]
+  B -- no --> E[Hit: lose HP,<br/>ball bounces back to the thrower]
+  C --> A
+  D --> A
   E --> A
 ```
 
-- **Never resets:** there is no serve to center after a hit. When a player takes a hit, the ball ricochets off them straight back to the attacker, who must catch it again. A good hit can snowball into a combo.
-- **Missed catch = damage:** if the ball passes you, you take the damage carried by that throw.
-- **Speed ramp:** each duel starts genuinely slow so everything is readable, then speed climbs with every touch and with time. It never drops back within a duel, so the end of a match is pure intensity.
+- **Catch (high reward):** tap just before impact. A timing ring closes on you as the ball arrives; tapping in its last moment is a perfect catch (+25% damage). Tapping too early fumbles: your hands drop, there is a short cooldown, and the ball usually hits you.
+- **Dodge (safe):** slide out of the ball's path. You take no damage, but you only pick the ball up off the back wall and throw it plain, with no power.
+- **Hit:** the ball deals its damage and bounces straight back at the thrower, who must now catch or dodge it. The ball never resets to center.
+- **Speed ramp:** each duel starts genuinely slow so everything is readable, then speed climbs with every throw and with time. It never drops back within a duel.
 - **Duel length:** about 3 to 5 minutes, driven by the speed ramp rather than a timer.
 
 ## Controls
 
-Touch only, with two gestures: slide to move, tap to switch power. Catching is automatic, so the skill is positioning and choosing.
+Touch only: slide to move (and dodge), tap to catch.
 
 | Action | Gesture | Notes |
 | --- | --- | --- |
-| Move | Keep a thumb on the screen and slide left or right | Player follows the thumb like a slider |
-| Switch power | Tap | Cycles through your 3 slots: 1, 2, 3, back to 1 |
-| Catch | Automatic | Happens when the ball reaches you and you're in its path |
-| Throw | Automatic | The armed power fires as the ball leaves you |
+| Move / dodge | Keep a thumb on the screen and slide left or right | Player follows the thumb like a slider |
+| Catch | Tap anywhere (a second finger works while sliding) | Only counts while a ball is close; time it to the closing ring |
+| Arm a power | Tap one of the three pips at the bottom | Desktop: 1/2/3 or Q/E to cycle |
+| Throw | Automatic | A catch throws back at the rival's body with the armed power |
 
 - **Power slots:** you hold up to 3 powers, shown as three glowing pips at the bottom of the screen.
-- **Color feedback:** the whole world (court lines, grid, your glow) shifts to the armed power's color, so you never need to look at the UI.
+- **Color feedback:** the whole world (court lines, dots, your glow) shifts to the armed power's color, so you never need to look at the UI.
 - **Refill:** a thrown power is spent, and its slot refills with the next card from your deck.
-- **Catch position matters:** a center catch is a perfect catch for bonus damage (+25%). An edge catch sends the ball at an angle, which is how you aim. Damage versus aim is a built-in tradeoff.
-- **Curved flight:** the ball never flies like Pong. Every throw bends: an edge catch adds curve toward the side it touched, catching while moving whips the ball in that direction, and every throw gets a little random spin. Cards add big arcs, S-bends and zigzags. Curve mirrors and softens off the side walls, and a ball can never turn flatter than ~60° from vertical.
+- **Aim is automatic:** every throw lands on the target's body (leading a moving target). Curves bend the path but still arrive; the skill is timing and reading, not aiming.
+- **Curved flight:** catching off-center or while moving adds curve, every throw gets a little spin, and cards add big arcs, S-bends and zigzags.
 
 ## Color system
 

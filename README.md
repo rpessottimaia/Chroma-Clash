@@ -8,13 +8,14 @@ The full design is in [`docs/GDD.md`](docs/GDD.md).
 
 Build a deck of 3 to 7 cards from five color decks (Surge, Phase, Void, Growth, Aegis; 8 cards each) on the **Edit deck** screen. Your deck is saved on your device. Then hit **Play** to face a color-themed rival.
 
-- **Slide** a thumb anywhere to move your chevron (it follows like a slider).
-- **Tap** (or tap with a second finger while sliding) to cycle your 3 armed powers. Tap a pip to arm it directly.
-- **Catching is automatic** when the ball reaches you inside your reach bar. The bright middle of the bar is a perfect catch (+25% damage). Edge catches angle the throw back.
-- **Every throw curves.** Edge catches and catching on the move bend the ball; cards add arcs, S-bends, zigzags, decoys and more.
-- A missed ball hits you for the damage it carries, then ricochets straight back at the thrower. It never resets, and the speed only climbs.
+It's dodgeball: every throw is aimed at your body.
 
-Desktop fallback: arrow keys or A/D to move, Space to cycle, 1/2/3 to arm a slot.
+- **Tap to catch** as the ring closes on you. A late tap is a perfect catch (+25% damage); too early and you fumble. A catch throws the ball back with your armed power.
+- **Slide** a thumb to move. Slide out of the way to **dodge**: safe, but you only get a plain throw back.
+- **Get hit** and you lose HP; the ball bounces back at the thrower, who must catch or dodge it.
+- **Tap a pip** at the bottom to arm that power. The world takes its color.
+
+Desktop fallback: arrow keys or A/D to move, Space to catch, 1/2/3 or Q/E to arm a power.
 
 ## Run it
 
